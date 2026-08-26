@@ -64,6 +64,7 @@ ESPERAR_LIBERAR_INICIO:
     ret
     sbic PINC, PC3
     ret
+    rcall PROCESO_LAVADO
     ret
 
 SELECCIONAR_CARGA:
@@ -105,6 +106,81 @@ MOSTRAR_LISTO:
     mov temp, leds_carga
     ori temp, (1<<PD0)
     out PORTD, temp
+    ret
+
+MOSTRAR_LAVADO:
+    mov temp, leds_carga
+    ori temp, (1<<PD1)
+    out PORTD, temp
+    ret
+
+PROCESO_LAVADO:
+    rcall MOSTRAR_LAVADO
+    ldi repeticiones, 5
+
+BUCLE_LAVADO:
+    rcall MOTOR_DERECHA
+    ldi segundos, 2
+    add segundos, carga
+    rcall RETARDO_SEGUNDOS_SEGURO
+    rcall MOTOR_DETENER
+    ldi segundos, 1
+    add segundos, carga
+    rcall RETARDO_SEGUNDOS_SEGURO
+    dec repeticiones
+    brne BUCLE_LAVADO
+    ret
+
+MOTOR_DERECHA:
+    ldi temp, (1<<PB0)
+    out PORTB, temp
+    ret
+
+MOTOR_DETENER:
+    clr temp
+    out PORTB, temp
+    ret
+
+RETARDO_SEGUNDOS_SEGURO:
+    tst segundos
+    breq FIN_RETARDO_SEGUNDOS
+
+BUCLE_RETARDO_SEGUNDOS:
+    sbic PINC, PC2
+    rjmp PUERTA_ABIERTA
+    rcall RETARDO_UN_SEGUNDO
+    dec segundos
+    brne BUCLE_RETARDO_SEGUNDOS
+
+FIN_RETARDO_SEGUNDOS:
+    ret
+
+PUERTA_ABIERTA:
+    in motor_guardado, PORTB
+    rcall MOTOR_DETENER
+
+ESPERAR_PUERTA_CERRADA:
+    sbic PINC, PC2
+    rjmp ESPERAR_PUERTA_CERRADA
+    out PORTB, motor_guardado
+    rjmp BUCLE_RETARDO_SEGUNDOS
+
+RETARDO_UN_SEGUNDO:
+    ldi delay1, 82
+
+RETARDO_UN_SEGUNDO_1:
+    ldi delay2, 255
+
+RETARDO_UN_SEGUNDO_2:
+    ldi delay3, 255
+
+RETARDO_UN_SEGUNDO_3:
+    dec delay3
+    brne RETARDO_UN_SEGUNDO_3
+    dec delay2
+    brne RETARDO_UN_SEGUNDO_2
+    dec delay1
+    brne RETARDO_UN_SEGUNDO_1
     ret
 
 RETARDO_ANTIRREBOTE:
