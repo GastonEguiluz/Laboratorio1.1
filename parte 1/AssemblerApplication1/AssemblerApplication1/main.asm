@@ -64,7 +64,7 @@ ESPERAR_LIBERAR_INICIO:
     ret
     sbic PINC, PC3
     ret
-    rcall PROCESO_LAVADO
+    rcall CICLO_COMPLETO
     ret
 
 SELECCIONAR_CARGA:
@@ -114,6 +114,33 @@ MOSTRAR_LAVADO:
     out PORTD, temp
     ret
 
+MOSTRAR_CENTRIFUGADO:
+    mov temp, leds_carga
+    ori temp, (1<<PD2)
+    out PORTD, temp
+    ret
+
+MOSTRAR_SECADO:
+    mov temp, leds_carga
+    ori temp, (1<<PD3)
+    out PORTD, temp
+    ret
+
+MOSTRAR_FIN:
+    mov temp, leds_carga
+    ori temp, (1<<PD4)
+    out PORTD, temp
+    ret
+
+CICLO_COMPLETO:
+    rcall PROCESO_LAVADO
+    rcall PROCESO_CENTRIFUGADO
+    rcall PROCESO_SECADO
+    rcall MOSTRAR_FIN
+    ldi segundos, 3
+    rcall RETARDO_SEGUNDOS_SEGURO
+    ret
+
 PROCESO_LAVADO:
     rcall MOSTRAR_LAVADO
     ldi repeticiones, 5
@@ -131,8 +158,57 @@ BUCLE_LAVADO:
     brne BUCLE_LAVADO
     ret
 
+PROCESO_CENTRIFUGADO:
+    rcall MOSTRAR_CENTRIFUGADO
+    rcall MOTOR_DERECHA
+    ldi segundos, 15
+    mov temp, carga
+    lsl temp
+    add temp, carga
+    add segundos, temp
+    rcall RETARDO_SEGUNDOS_SEGURO
+    rcall MOTOR_DETENER
+    ret
+
+PROCESO_SECADO:
+    rcall MOSTRAR_SECADO
+    mov ciclos_secado, carga
+    inc ciclos_secado
+
+BUCLE_SECADO:
+    rcall MOTOR_DERECHA
+    ldi segundos, 5
+    mov temp, carga
+    lsl temp
+    add segundos, temp
+    rcall RETARDO_SEGUNDOS_SEGURO
+    rcall MOTOR_DETENER
+
+    ldi segundos, 3
+    mov temp, carga
+    lsl temp
+    add segundos, temp
+    rcall RETARDO_SEGUNDOS_SEGURO
+
+    rcall MOTOR_IZQUIERDA
+    ldi segundos, 5
+    mov temp, carga
+    lsl temp
+    add segundos, temp
+    rcall RETARDO_SEGUNDOS_SEGURO
+    rcall MOTOR_DETENER
+
+    dec ciclos_secado
+    brne BUCLE_SECADO
+    ret
+
 MOTOR_DERECHA:
     ldi temp, (1<<PB0)
+    out PORTB, temp
+    ret
+
+MOTOR_IZQUIERDA:
+    ldi temp, (1<<PB1)
     out PORTB, temp
     ret
 
