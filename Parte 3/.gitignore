@@ -1,0 +1,8 @@
+.vs/
+**/Debug/
+**/Release/
+*.eep
+*.hex
+*.lss
+*.map
+*.obj
