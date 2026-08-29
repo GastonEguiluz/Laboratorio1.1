@@ -1,0 +1,245 @@
+.include "m328pdef.inc"
+
+.org 0x0000
+    rjmp RESET
+
+RESET:
+
+    ldi r16, high(RAMEND)
+    out SPH, r16
+
+    ldi r16, low(RAMEND)
+    out SPL, r16
+
+    ldi r16, 0x00
+    out DDRD, r16
+
+    ldi r16, 0b00111000
+    out DDRB, r16
+
+    ldi r16, 0b00001111
+    out DDRC, r16
+
+MAIN:
+
+    in r16, PIND
+
+    mov r18, r16
+    andi r18, 0x0F
+
+    swap r16
+    andi r16, 0x0F
+    mov r19, r16
+
+    in r17, PINB
+    andi r17, 0x07
+
+    cpi r17, 0
+    breq CLEAR
+
+    cpi r17, 1
+    breq RESTA
+
+    cpi r17, 2
+    breq SUMA
+
+    cpi r17, 3
+    breq XOR_OP
+
+    cpi r17, 4
+    breq AND_OP
+
+    cpi r17, 5
+    breq OR_OP
+
+    cpi r17, 6
+    breq SHL_OP
+
+    rjmp INC_OP
+
+CLEAR:
+
+    clr r20
+    clr r21
+    clr r24
+
+    rjmp SALIDA
+
+RESTA:
+
+    mov r20, r18
+    sub r20, r19
+
+    clr r21
+
+    brcc RESTA_NO_NEGATIVA
+
+    ldi r24, 1
+    rjmp RESTA_FIN
+
+RESTA_NO_NEGATIVA:
+
+    clr r24
+
+RESTA_FIN:
+
+    andi r20, 0x0F
+
+    rjmp SALIDA
+
+SUMA:
+
+    mov r20, r18
+    add r20, r19
+
+    mov r21, r20
+    lsr r21
+    lsr r21
+    lsr r21
+    lsr r21
+    andi r21, 0x01
+
+    clr r24
+
+    andi r20, 0x0F
+
+    rjmp SALIDA
+
+XOR_OP:
+
+    mov r20, r18
+    eor r20, r19
+
+    andi r20, 0x0F
+
+    clr r21
+    clr r24
+
+    rjmp SALIDA
+
+AND_OP:
+
+    mov r20, r18
+    and r20, r19
+
+    andi r20, 0x0F
+
+    clr r21
+    clr r24
+
+    rjmp SALIDA
+
+OR_OP:
+
+    mov r20, r18
+    or r20, r19
+
+    andi r20, 0x0F
+
+    clr r21
+    clr r24
+
+    rjmp SALIDA
+
+SHL_OP:
+
+    mov r20, r18
+
+    mov r21, r20
+
+    lsr r21
+    lsr r21
+    lsr r21
+
+    andi r21, 0x01
+
+    clr r24
+
+    lsl r20
+
+    andi r20, 0x0F
+
+    rjmp SALIDA
+
+INC_OP:
+
+    mov r20, r18
+
+    clr r24
+
+    cpi r20, 15
+    brne INC_SIN_CARRY
+
+    ldi r21, 1
+    rjmp HACER_INC
+
+INC_SIN_CARRY:
+
+    clr r21
+
+HACER_INC:
+
+    inc r20
+
+    andi r20, 0x0F
+
+    rjmp SALIDA
+
+SALIDA:
+
+    in r23, PINB
+    andi r23, 0x07
+
+    mov r22, r20
+
+    andi r22, 0x07
+
+    lsl r22
+    lsl r22
+    lsl r22
+
+    or r23, r22
+
+    out PORTB, r23
+
+    clr r23
+
+    mov r22, r20
+
+    andi r22, 0x08
+
+    lsr r22
+    lsr r22
+    lsr r22
+
+    or r23, r22
+
+    mov r22, r21
+
+    andi r22, 0x01
+
+    lsl r22
+
+    or r23, r22
+
+    mov r22, r24
+
+    andi r22, 0x01
+
+    lsl r22
+    lsl r22
+
+    or r23, r22
+
+    tst r20
+
+    brne NO_ZERO
+
+    ; Z = 1
+    ori r23, 0x08
+
+NO_ZERO:
+
+    out PORTC, r23
+
+    rjmp MAIN
