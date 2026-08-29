@@ -231,5 +231,84 @@ RETARDO_PASO_3:
     dec retardo1
     brne RETARDO_PASO_1
     ret
+
 LEER_BOTONES:
+    sbis PINB, PB0
+    rjmp BOTON_SIGUIENTE
+    sbis PINB, PB1
+    rjmp BOTON_ANTERIOR
+    sbis PINB, PB2
+    rjmp BOTON_PRIMERA
+    ret
+
+BOTON_SIGUIENTE:
+    rcall RETARDO_ANTIRREBOTE
+    sbic PINB, PB0
+    rjmp FIN_LEER_BOTONES
+    inc secuencia
+    cpi secuencia, 8
+    brlo SIGUIENTE_LISTA
+    clr secuencia
+
+SIGUIENTE_LISTA:
+    clr patron
+
+ESPERAR_SIGUIENTE:
+    sbis PINB, PB0
+    rjmp ESPERAR_SIGUIENTE
+    rcall RETARDO_ANTIRREBOTE
+    ret
+
+BOTON_ANTERIOR:
+    rcall RETARDO_ANTIRREBOTE
+    sbic PINB, PB1
+    rjmp FIN_LEER_BOTONES
+    cpi secuencia, 0
+    breq PASAR_A_ULTIMA
+    dec secuencia
+    rjmp ANTERIOR_LISTA
+
+PASAR_A_ULTIMA:
+    ldi secuencia, 7
+
+ANTERIOR_LISTA:
+    clr patron
+
+ESPERAR_ANTERIOR:
+    sbis PINB, PB1
+    rjmp ESPERAR_ANTERIOR
+    rcall RETARDO_ANTIRREBOTE
+    ret
+
+BOTON_PRIMERA:
+    rcall RETARDO_ANTIRREBOTE
+    sbic PINB, PB2
+    rjmp FIN_LEER_BOTONES
+    clr secuencia
+    clr patron
+
+ESPERAR_PRIMERA:
+    sbis PINB, PB2
+    rjmp ESPERAR_PRIMERA
+    rcall RETARDO_ANTIRREBOTE
+
+FIN_LEER_BOTONES:
+    ret
+
+RETARDO_ANTIRREBOTE:
+    ldi retardo1, 2
+
+ANTIRREBOTE_1:
+    ldi retardo2, 255
+
+ANTIRREBOTE_2:
+    ldi retardo3, 255
+
+ANTIRREBOTE_3:
+    dec retardo3
+    brne ANTIRREBOTE_3
+    dec retardo2
+    brne ANTIRREBOTE_2
+    dec retardo1
+    brne ANTIRREBOTE_1
     ret
